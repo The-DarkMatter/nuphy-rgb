@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+wh80/logs/
+wh80/settings.local.json
+*.bak
+*backup*.json

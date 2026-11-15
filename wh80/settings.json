@@ -1,0 +1,10 @@
+{
+    "_comment": "Defaults. Put personal overrides in settings.local.json (git-ignored).",
+    "_lconnect": "Only for Lian Li L-Connect 3 users (see docs/LCONNECT.md).",
+    "lconnect_proxy": false,
+    "lconnect_relabel": [
+        "NuPhy WH80"
+    ],
+    "_openrgb": "Path to OpenRGB.json. Empty = the default location in %APPDATA%.",
+    "openrgb_config": ""
+}
