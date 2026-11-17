@@ -4,8 +4,7 @@ Thanks for helping! The most useful contributions right now:
 
 - **Another NuPhy keyboard.** Getting a new board working is mostly finding
   its USB IDs, its LED count and its key-to-LED map.
-- **Testing** on the 2.4 GHz dongle or Bluetooth, other firmware versions,
-  Linux or macOS.
+- **Testing** on Bluetooth, other firmware versions, Linux or macOS.
 - **Packaging:** an installer, a tray app, or getting the plugin into
   SignalRGB's and the driver into OpenRGB's official repositories.
 
@@ -26,7 +25,8 @@ Read [docs/PROTOCOL.md](docs/PROTOCOL.md) first.
 3. **Stream with `0xDD` only.** The "set" commands store settings in flash.
 4. **Get the checksum right.** A bad checksum is rejected (`0xAB "cserr"`),
    which is what makes a mistake harmless. Don't rely on it, though.
-5. Use the USB cable. The dongle answers some commands itself.
+5. Probe over the USB cable. The 2.4 GHz dongle forwards commands but answers
+   some itself (GetInfo), which can mislead you.
 
 **Steps**
 

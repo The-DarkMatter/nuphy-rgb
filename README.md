@@ -23,8 +23,10 @@ back to its own lighting after a second or two.
 **Use one app at a time.** If two apps drive the keyboard, they fight and the
 lights flicker.
 
-Tested on Windows 11 with a WH80 on firmware 1.22 over the **USB cable**.
-The 2.4 GHz dongle and Bluetooth are untested.
+Tested on Windows 11 with a WH80 on firmware 1.22, over the **USB cable**
+(~90-125 fps) and the **2.4 GHz dongle** (~15 fps; a typing test showed no
+dropped or delayed keys). The bridge uses the cable when it's plugged in and
+the dongle otherwise. Bluetooth is untested.
 
 ## SignalRGB
 
@@ -71,7 +73,8 @@ To undo: `python wh80/setup_openrgb.py --remove` and
 
 ## Tools
 
-All in `wh80/`, and all need the USB cable. Close the RGB app first.
+All in `wh80/`; they work over the cable or the 2.4 GHz dongle. Close the RGB
+app first.
 
 | | |
 |---|---|

@@ -21,13 +21,12 @@ import time
 
 import settings
 from layout import WIDTH, led_cells
-from wh80 import WH80, WH80Error, KEY_LEDS, SIDE_LEDS
+from wh80 import WH80, WH80Error, KEY_LEDS, cable_present
 
 LISTEN = ("127.0.0.2", 5568)
 UNIVERSE = 1
 START_CHANNEL = 1
 IDLE_AFTER = 2.0          # seconds without packets -> stop feeding the keyboard
-MAX_FPS = 90
 
 log = logging.getLogger("wh80-bridge")
 CELLS = led_cells()       # (led_index, col, row)
@@ -76,7 +75,7 @@ def to_frame(dmx: bytes) -> bytes:
     every row acts like a strip and effects sweep left -> right (L-Connect).
     MATRIX 18x6 (108 LEDs): one colour per grid cell (OpenRGB matrix effects).
     """
-    frame = bytearray(3 * (KEY_LEDS + SIDE_LEDS))
+    frame = bytearray(3 * KEY_LEDS)
     data = dmx[START_CHANNEL - 1:]
     columns_mode = openrgb_layout() != "MATRIX"
     for idx, col, row in CELLS:
@@ -85,14 +84,19 @@ def to_frame(dmx: bytes) -> bytes:
             frame[3 * idx:3 * idx + 3] = data[o:o + 3]
     # The 48-LED front bar is not driven: in direct mode the firmware only
     # copies the 96 key LEDs from the framebuffer (see docs/PROTOCOL.md).
-    return bytes(frame[:3 * KEY_LEDS])
+    return bytes(frame)
+
+
+CABLE_FPS = 90
+DONGLE_FPS = 15         # measured: ~15 fps max over 2.4 GHz, no effect on typing
+KEEPALIVE = 0.5         # s; resend one chunk so the direct-mode watchdog never expires
 
 
 def open_keyboard():
     while True:
         try:
             k = WH80()
-            log.info("keyboard connected")
+            log.info("keyboard connected via %s", "2.4 GHz dongle" if k.wireless else "USB cable")
             return k
         except Exception as e:  # not plugged in yet
             log.debug("waiting for keyboard: %s", e)
@@ -110,8 +114,16 @@ def main():
     kb = open_keyboard()
     last_rx = 0.0
     last_tx = 0.0
+    last_cable_check = time.monotonic()
     latest = None
     while True:
+        # Prefer the cable: if we're on the dongle and the cable appears, switch.
+        if kb.wireless and time.monotonic() - last_cable_check > 3:
+            last_cable_check = time.monotonic()
+            if cable_present():
+                log.info("USB cable connected; switching from dongle")
+                kb.close()
+                kb = open_keyboard()
         try:
             pkt, _ = sock.recvfrom(1024)
             parsed = parse_e131(pkt)
@@ -126,11 +138,11 @@ def main():
         now = time.monotonic()
         if latest is None or now - last_rx > IDLE_AFTER:
             continue
-        if now - last_tx < 1 / MAX_FPS:
+        if now - last_tx < 1 / (DONGLE_FPS if kb.wireless else CABLE_FPS):
             continue
         try:
-            kb.stream_frame(latest)
-            last_tx = now
+            if kb.stream_changes(latest, keepalive=now - last_tx > KEEPALIVE):
+                last_tx = now
         except (WH80Error, OSError) as e:
             log.warning("keyboard write failed (%s); reconnecting", e)
             try:

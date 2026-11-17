@@ -2,7 +2,9 @@
 
 USB `VID 0x19F5 / PID 0xA011`, interface 1, usage page `0x01` usage `0x00`,
 64-byte reports on report ID 0. Bootloader is PID `0x8A04` ("NuPhy WH80 Upgrader").
-The 2.4G dongle is PID `0x8F01`.
+The 2.4 GHz dongle is PID `0x8F01` ("NuPhy WH80 Dongle"); its interface 1
+(usage page `0x01`, usage `0x00`) takes the same frames and **forwards them to
+the keyboard** (see *Over the 2.4 GHz dongle* below).
 
 This is NuPhy's **hall-effect (HE) family** protocol. It is *not* the Air100 V3
 protocol documented by [nuphykit](https://github.com/gig3m/nuphykit): different
@@ -85,6 +87,20 @@ LED index = key data index (same index into the key matrix, LedDefine, 0xDD and
 0xDE). 96 key slots (83 populated, see `wh80/led_map.json`) + 48 front-bar LEDs
 at 96..143 (readable with 0xDE, not drivable with 0xDD).
 Matrix slots 96-98 are the knob (mute, vol-, vol+).
+
+## Over the 2.4 GHz dongle
+
+Same frames, sent to the dongle's interface 1. Reads such as GetFunc and
+GetLedDefine return the keyboard's real data, and `0xDD` direct mode works.
+`0x03` GetInfo is answered by the dongle itself (keyboard version bytes, but
+the dongle's own build date).
+
+Each packet is a radio round trip: 3-20 ms (median ~8 ms) versus ~1 ms on the
+cable, so a 96-key frame (6 packets) tops out around 15 fps. In a typing test
+at that rate (about 300 key presses) no key presses or releases were lost and
+hold times matched an idle baseline. To keep the radio quiet, the bridge sends
+only the 56-byte chunks that changed, plus a one-chunk keep-alive every 0.5 s
+for the direct-mode watchdog.
 
 ## Safety notes
 

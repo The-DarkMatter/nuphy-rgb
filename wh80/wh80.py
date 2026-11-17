@@ -66,17 +66,33 @@ class WH80Error(RuntimeError):
     pass
 
 
-def find_path() -> bytes:
-    for d in hid.enumerate(VID, PID):
-        if d.get("usage_page") == 0x01 and d.get("usage") == 0x00:
-            return d["path"]
-    raise WH80Error("WH80 raw interface not found (USB cable connected?)")
+PID_DONGLE = 0x8F01         # 2.4 GHz receiver; forwards these commands to the keyboard
+
+
+def find_path(allow_dongle: bool = True) -> tuple[bytes, bool]:
+    """(path, wireless). Prefers the USB cable; falls back to the 2.4 GHz dongle."""
+    pids = (PID, PID_DONGLE) if allow_dongle else (PID,)
+    for pid in pids:
+        for d in hid.enumerate(VID, pid):
+            if d.get("usage_page") == 0x01 and d.get("usage") == 0x00:
+                return d["path"], pid == PID_DONGLE
+    raise WH80Error("WH80 not found (USB cable or paired 2.4 GHz dongle)")
+
+
+def cable_present() -> bool:
+    return any(d.get("usage_page") == 0x01 and d.get("usage") == 0x00
+               for d in hid.enumerate(VID, PID))
 
 
 class WH80:
-    def __init__(self, path: bytes | None = None):
+    def __init__(self, path: bytes | None = None, allow_dongle: bool = True):
         self.h = hid.device()
-        self.h.open_path(path or find_path())
+        if path is None:
+            path, self.wireless = find_path(allow_dongle)
+        else:
+            self.wireless = False
+        self.h.open_path(path)
+        self._sent: list[bytes | None] = []
 
     def close(self):
         self.h.close()
@@ -168,6 +184,25 @@ class WH80:
                 self.transact(LED_SYNC_DOWNLOAD, len(part), o, part)
             else:
                 self.h.write(b"\x00" + self.frame(LED_SYNC_DOWNLOAD, len(part), o, part))
+
+    def stream_changes(self, rgb: bytes, keepalive: bool = False) -> int:
+        """Like stream_frame, but only sends 56-byte chunks that changed since the
+        last call. With keepalive=True and nothing changed, sends one chunk so the
+        firmware's direct-mode watchdog doesn't expire. Returns packets sent."""
+        chunks = [rgb[o:o + CHUNK] for o in range(0, len(rgb), CHUNK)]
+        if len(self._sent) != len(chunks):
+            self._sent = [None] * len(chunks)
+        todo = [i for i, c in enumerate(chunks) if c != self._sent[i]]
+        if not todo and keepalive:
+            todo = [0]
+        for i in todo:
+            try:
+                self.transact(LED_SYNC_DOWNLOAD, len(chunks[i]), i * CHUNK, chunks[i])
+                self._sent[i] = chunks[i]
+            except WH80Error:
+                self._sent[i] = None          # resend next time
+                raise
+        return len(todo)
 
     def set_key_colors(self, mode: int, colors: dict[int, tuple[int, int, int]]) -> None:
         """colors: {key data index: (r,g,b)}; writes contiguous runs only."""
