@@ -3,7 +3,7 @@
 #   Remove:   powershell -ExecutionPolicy Bypass -File wh80\install_autostart.ps1 -Remove
 param([switch]$Remove)
 
-$lnk = Join-Path ([Environment]::GetFolderPath('Startup')) 'WH80 RGB bridge.lnk'
+$lnk = Join-Path ([Environment]::GetFolderPath('Startup')) 'nuphy-rgb bridge.lnk'
 if ($Remove) {
     Remove-Item $lnk -ErrorAction SilentlyContinue
     Write-Host "Removed $lnk"

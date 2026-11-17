@@ -1,7 +1,7 @@
 export function Name() { return "NuPhy WH80"; }
 export function VendorId() { return 0x19F5; }
 export function ProductId() { return 0xA011; }
-export function Publisher() { return "WH80 RGB community"; }
+export function Publisher() { return "nuphy-rgb"; }
 export function Size() { return /*SIZE*/; }
 export function DefaultPosition() { return [10, 100]; }
 export function DefaultScale() { return 8.0; }

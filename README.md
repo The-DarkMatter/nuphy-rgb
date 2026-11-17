@@ -1,7 +1,11 @@
-# WH80 RGB
+# nuphy-rgb
 
-Per-key RGB control for the **NuPhy WH80** in **SignalRGB** and **OpenRGB**,
-with optional **Lian Li L-Connect 3** sync.
+Open per-key RGB control for **NuPhy** keyboards in **SignalRGB** and
+**OpenRGB**, with optional **Lian Li L-Connect 3** sync.
+
+**Supported today: NuPhy WH80.** Other NuPhy hall-effect boards (Air75 HE,
+Halo65 HE, Field75 HE, ...) use the same protocol family in NuPhyIO, so they
+are likely close. If you own one, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The WH80 runs NuPhy's own firmware (not QMK/VIA), so SignalRGB and OpenRGB
 don't support it, and NuPhy has said it won't add support. This project
@@ -99,6 +103,12 @@ calibration or firmware-update commands. Use at your own risk; see
   the way into NuPhy's protocols.
 - [lian-li-linux](https://github.com/sgtaziz/lian-li-linux), for the Lian Li
   wireless research.
+
+## Contributing
+
+Owners of other NuPhy boards, testers on the 2.4 GHz dongle or Bluetooth, and
+anyone who wants to package this better are very welcome. Start with
+[CONTRIBUTING.md](CONTRIBUTING.md), which covers how to probe a new board safely.
 
 ## License
 
