@@ -37,6 +37,10 @@ the dongle otherwise. Bluetooth is untested.
 2. **Fully quit** SignalRGB (tray icon → Exit) and start it again.
 3. "NuPhy WH80" appears under Devices with an 18×6 key layout.
 
+The SignalRGB plugin currently needs the **USB cable**. Over the 2.4 GHz dongle,
+use the OpenRGB route for now (dongle support for the plugin is a welcome
+contribution).
+
 ## OpenRGB
 
 1. Install [Python 3.10+](https://www.python.org/downloads/) (tick "Add to PATH"),
